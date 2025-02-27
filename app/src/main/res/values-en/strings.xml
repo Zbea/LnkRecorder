@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">Recorder</string>
+    <string name="start_recording">Start</string>
+    <string name="play_record">Play</string>
+    <string name="save_record">Save</string>
+    <string name="list_record">List</string>
+    <string name="end_recording">End</string>
+    <string name="pause_record">Pause</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">Ok</string>
+    <string name="input_title">Input title</string>
+    <string name="no_content">No Content</string>
+    <string name="page_last">Last</string>
+    <string name="page_next">Next</string>
+
+    <string name="permission_apply">Permission application</string>
+    <string name="permission_successfully">Get permission successfully</string>
+    <string name="permission_denied">Permission has been denied</string>
+    <string name="permission_ask_no_more">No more inquiries </string>
+    <string name="permission_this_function_requires">require the function </string>
+    <string name="permission_unusable">Permission, otherwise unusable. Open the settings or not</string>
+
+</resources>

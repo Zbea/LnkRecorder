@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="90dp"
+    android:background="@drawable/bg_line_bottom"
+    android:gravity="center_vertical"
+    >
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="@dimen/dp_10"
+        android:orientation="vertical"
+        >
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:lines="1"
+            android:ellipsize="end"
+            android:textSize="24sp"/>
+
+        <TextView
+            android:id="@+id/tv_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:textColor="@color/black"
+            android:textSize="18sp"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_second"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:text="00:00"
+        android:textColor="@color/black"
+        android:textSize="24sp"/>
+
+    <ImageView
+        android:id="@+id/iv_record"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginEnd="10dp"
+        android:scaleType="center"
+        android:src="@mipmap/icon_record_play"
+        />
+
+    <ImageView
+        android:id="@+id/iv_delete"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginEnd="10dp"
+        android:scaleType="center"
+        android:src="@mipmap/icon_setting_delete"
+        android:background="@drawable/click_btn_transparent_line_black"
+        />
+
+</LinearLayout>
