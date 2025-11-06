@@ -63,25 +63,27 @@ class MainActivity : Activity(), EasyPermissions.PermissionCallbacks {
                 pauseMediaPlayer()
             }
             if (!isRecording){
-                second=0
-                isRecording=true
-                releaseMediaPlayer()
-                tv_recorder.setText(R.string.end_recording)
-
-                if (mRecorder==null){
-                    mRecorder=MediaRecorder()
-                    mRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC) // 麦克风
-                    mRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4) // 输出格式
-                    mRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC) // 编码格式
-                    mRecorder?.setAudioSamplingRate(44100) // 采样率
-                    mRecorder?.setAudioChannels(1) // 单声道
-                    mRecorder?.setAudioEncodingBitRate(128000) // 比特率
-                    mRecorder?.setOutputFile(path)
-                }
-                mRecorder?.prepare()//准备
-                mRecorder?.start()//开始录音
-
-                startTimer(1)
+                Thread {
+                    releaseMediaPlayer()
+                    if (mRecorder==null){
+                        mRecorder=MediaRecorder()
+                        mRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC) // 麦克风
+                        mRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4) // 输出格式
+                        mRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC) // 编码格式
+                        mRecorder?.setAudioSamplingRate(44100) // 采样率
+                        mRecorder?.setAudioChannels(1) // 单声道
+                        mRecorder?.setAudioEncodingBitRate(128000) // 比特率
+                        mRecorder?.setOutputFile(path)
+                    }
+                    mRecorder?.prepare()//准备
+                    runOnUiThread {
+                        mRecorder?.start()//开始录音
+                        startTimer(1)
+                        second=0
+                        isRecording=true
+                        tv_recorder.setText(R.string.end_recording)
+                    }
+                }.start()
             }
             else{
                 pauseRecorder()
