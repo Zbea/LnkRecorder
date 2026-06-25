@@ -23,11 +23,10 @@ public class RecorderBeanDao extends AbstractDao<RecorderBean, Long> {
      */
     public static class Properties {
         public final static Property Id = new Property(0, Long.class, "id", true, "_id");
-        public final static Property UserId = new Property(1, long.class, "userId", false, "USER_ID");
-        public final static Property Title = new Property(2, String.class, "title", false, "TITLE");
-        public final static Property Time = new Property(3, long.class, "time", false, "TIME");
-        public final static Property Path = new Property(4, String.class, "path", false, "PATH");
-        public final static Property Second = new Property(5, int.class, "second", false, "SECOND");
+        public final static Property Title = new Property(1, String.class, "title", false, "TITLE");
+        public final static Property Time = new Property(2, long.class, "time", false, "TIME");
+        public final static Property Path = new Property(3, String.class, "path", false, "PATH");
+        public final static Property Second = new Property(4, int.class, "second", false, "SECOND");
     }
 
 
@@ -44,11 +43,10 @@ public class RecorderBeanDao extends AbstractDao<RecorderBean, Long> {
         String constraint = ifNotExists? "IF NOT EXISTS ": "";
         db.execSQL("CREATE TABLE " + constraint + "\"RECORDER_BEAN\" (" + //
                 "\"_id\" INTEGER PRIMARY KEY AUTOINCREMENT UNIQUE ," + // 0: id
-                "\"USER_ID\" INTEGER NOT NULL ," + // 1: userId
-                "\"TITLE\" TEXT," + // 2: title
-                "\"TIME\" INTEGER NOT NULL ," + // 3: time
-                "\"PATH\" TEXT," + // 4: path
-                "\"SECOND\" INTEGER NOT NULL );"); // 5: second
+                "\"TITLE\" TEXT," + // 1: title
+                "\"TIME\" INTEGER NOT NULL ," + // 2: time
+                "\"PATH\" TEXT," + // 3: path
+                "\"SECOND\" INTEGER NOT NULL );"); // 4: second
     }
 
     /** Drops the underlying database table. */
@@ -65,19 +63,18 @@ public class RecorderBeanDao extends AbstractDao<RecorderBean, Long> {
         if (id != null) {
             stmt.bindLong(1, id);
         }
-        stmt.bindLong(2, entity.getUserId());
  
         String title = entity.getTitle();
         if (title != null) {
-            stmt.bindString(3, title);
+            stmt.bindString(2, title);
         }
-        stmt.bindLong(4, entity.getTime());
+        stmt.bindLong(3, entity.getTime());
  
         String path = entity.getPath();
         if (path != null) {
-            stmt.bindString(5, path);
+            stmt.bindString(4, path);
         }
-        stmt.bindLong(6, entity.getSecond());
+        stmt.bindLong(5, entity.getSecond());
     }
 
     @Override
@@ -88,19 +85,18 @@ public class RecorderBeanDao extends AbstractDao<RecorderBean, Long> {
         if (id != null) {
             stmt.bindLong(1, id);
         }
-        stmt.bindLong(2, entity.getUserId());
  
         String title = entity.getTitle();
         if (title != null) {
-            stmt.bindString(3, title);
+            stmt.bindString(2, title);
         }
-        stmt.bindLong(4, entity.getTime());
+        stmt.bindLong(3, entity.getTime());
  
         String path = entity.getPath();
         if (path != null) {
-            stmt.bindString(5, path);
+            stmt.bindString(4, path);
         }
-        stmt.bindLong(6, entity.getSecond());
+        stmt.bindLong(5, entity.getSecond());
     }
 
     @Override
@@ -112,11 +108,10 @@ public class RecorderBeanDao extends AbstractDao<RecorderBean, Long> {
     public RecorderBean readEntity(Cursor cursor, int offset) {
         RecorderBean entity = new RecorderBean( //
             cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0), // id
-            cursor.getLong(offset + 1), // userId
-            cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2), // title
-            cursor.getLong(offset + 3), // time
-            cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4), // path
-            cursor.getInt(offset + 5) // second
+            cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1), // title
+            cursor.getLong(offset + 2), // time
+            cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3), // path
+            cursor.getInt(offset + 4) // second
         );
         return entity;
     }
@@ -124,11 +119,10 @@ public class RecorderBeanDao extends AbstractDao<RecorderBean, Long> {
     @Override
     public void readEntity(Cursor cursor, RecorderBean entity, int offset) {
         entity.setId(cursor.isNull(offset + 0) ? null : cursor.getLong(offset + 0));
-        entity.setUserId(cursor.getLong(offset + 1));
-        entity.setTitle(cursor.isNull(offset + 2) ? null : cursor.getString(offset + 2));
-        entity.setTime(cursor.getLong(offset + 3));
-        entity.setPath(cursor.isNull(offset + 4) ? null : cursor.getString(offset + 4));
-        entity.setSecond(cursor.getInt(offset + 5));
+        entity.setTitle(cursor.isNull(offset + 1) ? null : cursor.getString(offset + 1));
+        entity.setTime(cursor.getLong(offset + 2));
+        entity.setPath(cursor.isNull(offset + 3) ? null : cursor.getString(offset + 3));
+        entity.setSecond(cursor.getInt(offset + 4));
      }
     
     @Override

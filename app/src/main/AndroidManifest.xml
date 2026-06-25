@@ -20,21 +20,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LnkRecorder"
         tools:targetApi="31">
-        <receiver android:name=".MyBroadcastReceiver"
-            android:enabled="true"
-            android:exported="true"
-            >
-            <intent-filter>
-                <action android:name="com.bll.lnkstudy.account.login"/>
-                <action android:name="com.bll.lnkstudy.account.logout"/>
-                <action android:name="com.bll.lnkteacher.account.login"/>
-                <action android:name="com.bll.lnkteacher.account.logout"/>
-                <action android:name="com.bll.lnkcommon.account.login"/>
-                <action android:name="com.bll.lnkcommon.account.logout"/>
-            </intent-filter>
-        </receiver>
-
-        <activity
+<activity
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.LnkRecorder">

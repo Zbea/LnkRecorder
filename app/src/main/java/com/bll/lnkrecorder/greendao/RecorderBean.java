@@ -11,7 +11,6 @@ public class RecorderBean {
     @Id(autoincrement = true)
     @Unique
     public Long id;
-    public long userId;
     public String title;
     public long time;
     public String path;
@@ -21,11 +20,9 @@ public class RecorderBean {
     @Transient
     public int currentSecond;
 
-    @Generated(hash = 1369675094)
-    public RecorderBean(Long id, long userId, String title, long time, String path,
-            int second) {
+    @Generated(hash = 1266599602)
+    public RecorderBean(Long id, String title, long time, String path, int second) {
         this.id = id;
-        this.userId = userId;
         this.title = title;
         this.time = time;
         this.path = path;
@@ -39,12 +36,6 @@ public class RecorderBean {
     }
     public void setId(Long id) {
         this.id = id;
-    }
-    public long getUserId() {
-        return this.userId;
-    }
-    public void setUserId(long userId) {
-        this.userId = userId;
     }
     public String getTitle() {
         return this.title;
@@ -70,4 +61,5 @@ public class RecorderBean {
     public void setSecond(int second) {
         this.second = second;
     }
+    
 }

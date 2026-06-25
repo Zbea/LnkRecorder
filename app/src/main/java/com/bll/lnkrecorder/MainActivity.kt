@@ -4,13 +4,13 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.media.MediaPlayer
-import android.media.MediaRecorder
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import com.bll.lnkrecorder.MyApplication.Companion.mContext
 import com.bll.lnkrecorder.greendao.RecorderBean
 import com.bll.lnkrecorder.greendao.RecorderDaoManager
+import com.bll.lnkrecorder.utils.NativeNoiseWavRecorder
 import com.bll.lnkrecorder.utils.ToolUtils
 import kotlinx.android.synthetic.main.ac_main.tv_list
 import kotlinx.android.synthetic.main.ac_main.tv_mediaplayer
@@ -28,13 +28,12 @@ class MainActivity : Activity(), EasyPermissions.PermissionCallbacks {
     private val RECORDER_PATH = mContext.getExternalFilesDir("Recorder")!!.path
     private var path: String? = null
     private var mPlayer: MediaPlayer? = null
-    private var mRecorder: MediaRecorder? = null
     private var mRecorderBean: RecorderBean?=null
-    private var isRecording=false
     private var isPlaying=false
     private var second=0
     private var timer:Timer?=null
     private var isSave=false
+    private lateinit var recorder: NativeNoiseWavRecorder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,43 +54,35 @@ class MainActivity : Activity(), EasyPermissions.PermissionCallbacks {
         initRecorderBean()
 
         initView()
+
+
     }
 
     private fun initView() {
-        tv_recorder.setOnClickListener {
-            if (isPlaying){
-                pauseMediaPlayer()
+
+        recorder = NativeNoiseWavRecorder(this)
+        // 设置计时回调
+        recorder.setOnRecordTimeListener(object : NativeNoiseWavRecorder.OnRecordTimeListener {
+            override fun onTimeUpdate(totalMillis: Long, totalSeconds: Int, timeFormat: String) {
+                tv_time.text= timeFormat
+                second=totalSeconds
+                mRecorderBean?.second=totalSeconds
             }
-            if (!isRecording){
-                Thread {
-                    releaseMediaPlayer()
-                    if (mRecorder==null){
-                        mRecorder=MediaRecorder()
-                        mRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC) // 麦克风
-                        mRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4) // 输出格式
-                        mRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC) // 编码格式
-                        mRecorder?.setAudioSamplingRate(44100) // 采样率
-                        mRecorder?.setAudioChannels(1) // 单声道
-                        mRecorder?.setAudioEncodingBitRate(128000) // 比特率
-                        mRecorder?.setOutputFile(path)
-                    }
-                    mRecorder?.prepare()//准备
-                    runOnUiThread {
-                        mRecorder?.start()//开始录音
-                        startTimer(1)
-                        second=0
-                        isRecording=true
-                        tv_recorder.setText(R.string.end_recording)
-                    }
-                }.start()
+        })
+
+        tv_recorder.setOnClickListener {
+            if (recorder.isRecording()){
+                recorder.stopRecording()
+                tv_recorder.text="开始录音"
             }
             else{
-                pauseRecorder()
+                recorder.startRecording(path!!)
+                tv_recorder.text="结束录音"
             }
         }
 
         tv_mediaplayer.setOnClickListener {
-            if (isRecording||!File(path).exists())
+            if (recorder.isRecording()||!File(path!!).exists())
                 return@setOnClickListener
             if (!isPlaying){
                 isPlaying=true
@@ -112,7 +103,7 @@ class MainActivity : Activity(), EasyPermissions.PermissionCallbacks {
                     }
                     mPlayer?.prepare()
                 }
-                startTimer(2)
+                startTimer()
                 mPlayer?.start()
             }
             else{
@@ -121,8 +112,8 @@ class MainActivity : Activity(), EasyPermissions.PermissionCallbacks {
         }
 
         tv_save.setOnClickListener {
-            if (isRecording){
-                pauseRecorder()
+            if (recorder.isRecording()){
+                recorder.stopRecording()
             }
             if (isPlaying){
                 pauseMediaPlayer()
@@ -136,7 +127,7 @@ class MainActivity : Activity(), EasyPermissions.PermissionCallbacks {
         }
 
         tv_list.setOnClickListener {
-            if (isRecording)
+            if (recorder.isRecording())
                 return@setOnClickListener
             if (isPlaying){
                 pauseMediaPlayer()
@@ -148,47 +139,25 @@ class MainActivity : Activity(), EasyPermissions.PermissionCallbacks {
 
     private fun initRecorderBean(){
         mRecorderBean= RecorderBean()
-        mRecorderBean?.userId=ToolUtils().getUserId()
         mRecorderBean?.time=System.currentTimeMillis()
 
         if (!File(RECORDER_PATH).exists())
             File(RECORDER_PATH).mkdirs()
-        path=File(RECORDER_PATH,"${ToolUtils().timeToString(mRecorderBean?.time!!)}.mp4").path
+        path=File(RECORDER_PATH,"${ToolUtils().timeToString(mRecorderBean?.time!!)}.wav").path
 
         mRecorderBean?.path=path
     }
 
-    private fun startTimer(type:Int){
+    private fun startTimer(){
         timer= Timer()
         timer!!.schedule(object: TimerTask() {
             override fun run() {
-                if (type==1){
-                    second+=1
-                }
-                else{
-                    second-=1
-                }
+                second-=1
                 runOnUiThread {
                     tv_time.text= ToolUtils().secondToString(second)
                 }
             }
         } ,1000,1000)
-    }
-
-    private fun pauseRecorder(){
-        mRecorderBean?.second=second
-        tv_recorder.setText(R.string.start_recording)
-        isRecording=false
-        timer!!.cancel()
-        releaseRecorder()
-    }
-
-    private fun releaseRecorder(){
-        if (mRecorder!=null){
-            mRecorder?.stop()
-            mRecorder?.release()
-            mRecorder=null
-        }
     }
 
     private fun pauseMediaPlayer(){
@@ -260,8 +229,10 @@ class MainActivity : Activity(), EasyPermissions.PermissionCallbacks {
         if (!isSave&&!path.isNullOrEmpty())
             File(path).delete()
 
-        releaseRecorder()
         releaseMediaPlayer()
+
+        if (recorder.isRecording())
+            recorder.stopRecording()
     }
 
 }

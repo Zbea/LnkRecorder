@@ -23,15 +23,4 @@ class ToolUtils {
         return sdf.format(Date(date))
     }
 
-    fun getUserId():Long{
-        val sharedPreferences = mContext.getSharedPreferences("config", Context.MODE_PRIVATE)
-        return sharedPreferences.getLong("userId", 0L)
-    }
-
-    fun saveUserId(userId:Long){
-        val  sharedPreferences = mContext.getSharedPreferences("config", Context.MODE_PRIVATE)
-        val  editor = sharedPreferences.edit()
-        editor.putLong("userId", userId)
-        editor.apply()
-    }
 }

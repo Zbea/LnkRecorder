@@ -1,0 +1,106 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Build & Test Commands
+
+```bash
+# Build debug APK
+./gradlew assembleDebug
+
+# Build release APK
+./gradlew assembleRelease
+
+# Run unit tests (JVM host-side)
+./gradlew test
+
+# Run instrumented tests (requires device/emulator)
+./gradlew connectedAndroidTest
+
+# Lint
+./gradlew lint
+```
+
+APK output naming: `LnkRecorder{VERSION}_{variant}.apk` (e.g., `LnkRecorderV 1.0.1_release.apk`).
+
+## Project Overview
+
+LnkRecorder is an Android audio recording app that saves WAV files with native noise suppression. It belongs to the **Lnk ecosystem** — a suite of apps (LnkStudy, LnkTeacher, LnkCommon, LnkWrite) that share user identity via broadcast intents. Recordings are user-scoped so each user sees only their own data.
+
+- **Language**: Kotlin (primary) + Java (GreenDAO auto-generated code + utils)
+- **Min SDK**: 26 (Android 8.0) | **Target/Compile SDK**: 33
+- **Kotlin**: 1.9.0 | **AGP**: 7.4.2
+- **Database**: GreenDAO 3.3.0 (SQLite ORM)
+- **Architecture**: Single-module Android app — no Clean Architecture layers, all logic lives in Activities and utility classes
+
+## Architecture
+
+### Core Flow
+
+1. `MyApplication` → initializes GreenDAO database (`lnkrecorder.db`) and exposes `DaoSession` globally
+2. `MyBroadcastReceiver` → receives login/logout intents from sibling apps, persists `userId` to SharedPreferences
+3. `MainActivity` → record WAV, play back, save with title
+4. `RecorderListActivity` → paginated list of saved recordings with playback and delete
+
+### Key Classes
+
+| Class | Role |
+|-------|------|
+| `MainActivity` | Main screen: record/play/save/list navigation |
+| `RecorderListActivity` | Paginated recording list with inline playback |
+| `MyBroadcastReceiver` | Listens for `com.bll.lnk*.account.login/logout` broadcasts, extracts userId |
+| `MyApplication` | Initializes GreenDAO, holds global `Context` and `DaoSession` |
+| `NativeNoiseWavRecorder` | WAV recording engine with NoiseSuppressor, PCM gain, dual-thread timing |
+| `RecorderDaoManager` | Singleton DAO: CRUD + paginated queries scoped by userId |
+| `RecorderBean` | GreenDAO entity: id, userId, title, time, path, second (+ transient state/currentSecond) |
+| `ToolUtils` | Date formatting, userId storage in SharedPreferences |
+| `InputContentDialog` | Custom dialog for naming recordings before save |
+
+### Data Layer
+
+- **Entity**: `RecorderBean` — `@Entity` with auto-increment id, indexed by `userId`
+- **DAO**: `RecorderDaoManager.getInstance()` (double-checked locking singleton) — queries are always filtered by current `userId` via `WhereCondition`
+- **DB**: SQLite via GreenDAO, file `lnkrecorder.db`, schema version 1
+- **User identity**: stored in `SharedPreferences("config")` key `"userId"`, set by broadcast receiver
+
+### Recording Engine (`NativeNoiseWavRecorder`)
+
+- **Format**: 16kHz sample rate, 16-bit PCM, mono, WAV container
+- **Audio source**: `VOICE_RECOGNITION` (hardware-optimized for speech)
+- **Noise suppression**: Android `NoiseSuppressor` API, enabled if device supports it
+- **Gain**: 1.5x amplification applied to PCM shorts with clipping protection
+- **Concurrency**: Two single-thread `ExecutorService` pools — one for PCM write loop, one for 1-second timer
+- **WAV header**: Written with `RandomAccessFile` — placeholder bytes at start, updated with actual file/data sizes on stop
+- **File path**: `context.getExternalFilesDir("Recorder")/<yyyyMMdd_HHmmSS>.wav`
+
+### Cross-App User Identity
+
+The app does **not** have its own login. A `userId` is received via broadcast from sibling apps:
+
+```kotlin
+// MyBroadcastReceiver reacts to actions:
+"com.bll.lnkstudy.account.login"    // LnkStudy login
+"com.bll.lnkteacher.account.login"  // LnkTeacher login
+"com.bll.lnkcommon.account.login"   // LnkCommon login
+"com.bll.lnkwrite.account.login"    // LnkWrite login
+// ... and corresponding .logout actions
+```
+
+The receiver extracts `intent.getLongExtra("userId", 0L)` and persists it.
+
+### Dependencies
+
+- `org.greenrobot:greendao:3.3.0` — ORM
+- `com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.47` — RecyclerView adapter
+- `pub.devrel:easypermissions:1.2.0` — runtime permission handling
+- `com.google.code.gson:gson:2.8.9` — JSON (included but not heavily used)
+- Both AndroidX and legacy Support Library (27.1.1) dependencies coexist
+
+## Important Notes
+
+- **kotlin-android-extensions** plugin is used for synthetic view binding (`kotlinx.android.synthetic.main.*`). This plugin is deprecated — synthetic imports are present in both Activities.
+- **Hardcoded signing credentials**: `app/build.gradle` contains `keyAlias`, `keyPassword`, `storePassword` in plaintext. This is a security concern for production.
+- **Maven mirrors**: Aliyun mirrors are configured in `settings.gradle` — builds may fail outside China without removing them or using a VPN.
+- **GreenDAO code generation**: `RecorderBeanDao`, `DaoMaster`, `DaoSession` are auto-generated by the GreenDAO Gradle plugin. Do not hand-edit these. If you modify `RecorderBean`'s `@Entity` fields, increment `schemaVersion` in `build.gradle`.
+- **jniLibs directory** exists in `app/src/main/jniLibs` but no native `.so` references appear in the Kotlin/Java source — the recording is purely Java/Kotlin via `AudioRecord`.
+- **`!!` usage**: The codebase uses `!!` (non-null assertion) liberally — this is an existing pattern, but new code should prefer safe calls (`?.`, `?:`, `requireNotNull`).
